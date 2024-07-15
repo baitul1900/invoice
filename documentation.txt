@@ -38,9 +38,9 @@ To start the server, run the following command:
 
 bash
 Copy code
-npm start
+npm run start-dev
 # or using yarn
-yarn start
+yarn run start-dev
 The server will start on the port specified in your .env file (PORT=5400).
 
 5. Running Tests
