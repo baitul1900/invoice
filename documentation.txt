@@ -1,0 +1,64 @@
+Certainly! Here’s the content formatted for a `.txt` file for your backend project documentation. You can copy this text and save it as `README.txt` or any other suitable name for your documentation.
+
+---
+
+**README.txt**
+
+---
+
+# Backend Project Documentation
+
+## Project Overview
+
+This backend project is built using Node.js, Express, and MongoDB. It includes authentication, product management, inventory management, and invoice generation functionalities.
+
+## Project Setup
+
+Follow these steps to set up the project on your local machine:
+
+### 1. Clone the Repository
+
+If you haven't already cloned the repository, use the following command:
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
+
+### 2. Install Dependencies
+
+Make sure you have [Node.js](https://nodejs.org/) installed on your machine. Then, run the following command to install the required dependencies:
+
+```bash
+npm install
+# or using yarn
+yarn install
+```
+
+### 3. Create a `.env` File
+
+You will need to create a `.env` file in the root directory of the project. This file contains environment variables used for configuration.
+
+Create a file named `.env` and add the following content:
+
+```plaintext
+JWT_KEY=abc127876jhsdgjkash
+PORT=5400
+USER=baitulamin1900
+PASSWORD=2O9bhZ2BMTiscFun
+MONGO_URL=mongodb+srv://baitulamin1900:2O9bhZ2BMTiscFun@cluster0.gnx9huc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```
+
+Make sure to replace the placeholder values with your actual configuration details if they differ.
+
+### 4. Start the Server
+
+To start the server, run the following command:
+
+```bash
+npm run start-dev
+# or using yarn
+yarn run start-dev
+```
+
+The server will start on the port specified in your `.env` file (`PORT=5400`).
