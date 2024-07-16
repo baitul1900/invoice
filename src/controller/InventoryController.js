@@ -23,6 +23,11 @@ const addToInventory = async (req, res) => {
     try {
         const {userId, productId, name, quantity, price, description, image} = req.body;
 
+        if (!userId || !productId || !name || !quantity || !price || !description || !image) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+        
+
          // Check if the user exists
          const user = await userModel.findOne({ _id: userId });
          if (!user) {
