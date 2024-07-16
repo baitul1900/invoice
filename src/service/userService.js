@@ -80,6 +80,8 @@ const readProfileService = async (req) => {
     }
 };
 
+
+
 const updateUserService = async (req) => {
     try {
         const { password, image, role } = req.body;

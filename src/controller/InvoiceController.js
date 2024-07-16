@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const inventoryModel = require('../models/InventoryModel');
 const {generateInvoiceHTML, generatePDF} = require('../helpers/pdfUtils');
 
-let invoiceID = mongoose.Types.ObjectId;
+let invoiceID = new mongoose.Types.ObjectId;
 const createInvoice = async (req, res) => {
     try {
         const { userId, inventoryIds } = req.body;
@@ -32,6 +32,9 @@ const createInvoice = async (req, res) => {
                 inventoryId,
                 total,
             });
+
+            // Remove the inventory item
+            await inventoryModel.findByIdAndDelete(inventoryId);
         }
 
         // Create the invoice
@@ -49,6 +52,9 @@ const createInvoice = async (req, res) => {
         return res.status(500).json({ error: 'Failed to create invoice' });
     }
 };
+
+
+  
 
 
 const viewInvoice = async (req, res) => {

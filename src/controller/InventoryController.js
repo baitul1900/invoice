@@ -56,13 +56,14 @@ const addToInventory = async (req, res) => {
 // get list of inventory added by user 
 const inventoryList = async (req, res) => {
     try {
-        const {userId} = req.params;
+        const { userId } = req.params;
 
-        // find the item and aggrate
+        // Convert userId to ObjectId
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
+        // Find the item and aggregate
         const inventory = await inventoryModel.aggregate([
-            {$match: { userId: userID }},
-            // join opration here
-
+            { $match: { userId: userObjectId } },  // Ensure userId is an ObjectId
             {
                 $lookup: {
                     from: 'users',
@@ -71,14 +72,12 @@ const inventoryList = async (req, res) => {
                     as: 'user'
                 }
             },
-
             {
                 $unwind: '$user'
             },
-
             {
                 $project: {
-                    _id: 0,
+                    _id: 1,
                     productId: 1,
                     name: 1,
                     description: 1,
@@ -89,15 +88,17 @@ const inventoryList = async (req, res) => {
                     userEmail: '$user.email',
                 },
             }
+        ]);
 
-        ])
+       
 
         return res.status(200).json({ status: 'success', data: inventory });
     } catch (error) {
         console.error('Error in inventoryList:', error);
         return res.status(500).json({ error: 'Failed to get inventory list' });
     }
-}
+};
+
 
 
 
