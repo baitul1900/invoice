@@ -11,7 +11,7 @@ const userController = require('../controller/userController');
 const {getProducts, addToInventory, inventoryList} = require('../controller/InventoryController');
 
 // invoice controller 
-const {createInvoice, viewInvoice, printInvoice, invoiceListByUser } = require('../controller/InvoiceController');
+const {createInvoice, viewInvoice, printInvoice, invoiceListByUser, deleteInvoice } = require('../controller/InvoiceController');
 
 
 
@@ -42,6 +42,7 @@ router.post('/create-invoice', authVerify, createInvoice);
 router.get('/view-invoice/:invoiceId', authVerify, viewInvoice);
 router.get('/print-invoice/:invoiceId', authVerify, printInvoice);
 router.get('/invoice-list/:userId', authVerify, invoiceListByUser);
+router.delete('/invoice-delete/:invoiceId', authVerify, deleteInvoice);
 
 
 

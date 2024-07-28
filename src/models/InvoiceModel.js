@@ -1,5 +1,3 @@
-// models/InvoiceModel.js
-
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -13,6 +11,26 @@ const invoiceSchema = new Schema({
         inventoryId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'inventories',
+            required: true,
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+        description: {
+            type: String,
+            required: true,
+        },
+        quantity: {
+            type: Number,
+            required: true,
+        },
+        price: {
+            type: Number,
+            required: true,
+        },
+        image: {
+            type: String,
             required: true,
         },
         total: {

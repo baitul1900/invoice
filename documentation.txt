@@ -26,11 +26,13 @@ Create a file named .env and add the following content:
 
 plaintext
 Copy code
+
 JWT_KEY=abc127876jhsdgjkash
 PORT=5400
 USER=baitulamin1900
 PASSWORD=2O9bhZ2BMTiscFun
 MONGO_URL=mongodb+srv://baitulamin1900:2O9bhZ2BMTiscFun@cluster0.gnx9huc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
 Make sure to replace the placeholder values with your actual configuration details if they differ.
 
 4. Start the Server

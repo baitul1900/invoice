@@ -5,6 +5,8 @@ const inventoryModel = require('../models/InventoryModel');
 const {generateInvoiceHTML, generatePDF} = require('../helpers/pdfUtils');
 
 let invoiceID = new mongoose.Types.ObjectId;
+
+
 const createInvoice = async (req, res) => {
     try {
         const { userId, inventoryIds } = req.body;
@@ -21,15 +23,24 @@ const createInvoice = async (req, res) => {
         for (const inventoryId of inventoryIds) {
             const inventoryItem = await inventoryModel.findById(inventoryId);
 
-            if (!inventoryItem || inventoryItem.userId.toString() !== userId) {
-                return res.status(400).json({ error: `Product ID ${inventoryId} not found or does not belong to the user` });
+            if (!inventoryItem) {
+                return res.status(404).json({ error: `Product with ID ${inventoryId} not found` });
+            }
+
+            if (inventoryItem.userId.toString() !== userId) {
+                return res.status(403).json({ error: `Product ID ${inventoryId} does not belong to the user` });
             }
 
             const total = inventoryItem.price * inventoryItem.quantity;
             totalAmount += total;
 
             invoiceProducts.push({
-                inventoryId,
+                inventoryId: inventoryItem._id,
+                name: inventoryItem.name,
+                description: inventoryItem.description,
+                quantity: inventoryItem.quantity,
+                price: inventoryItem.price,
+                image: inventoryItem.image,
                 total,
             });
 
@@ -53,6 +64,8 @@ const createInvoice = async (req, res) => {
     }
 };
 
+
+
 // Fetch invoice list for a user
 const invoiceListByUser = async (req, res) => {
     try {
@@ -62,65 +75,32 @@ const invoiceListByUser = async (req, res) => {
             return res.status(400).json({ error: 'Invalid user ID' });
         }
 
-        // Aggregation pipeline to get the invoice details along with user and product details
+        // Aggregation pipeline to get the invoice details along with user details
         const invoices = await Invoice.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } },  // Match invoices for the given user ID
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $lookup: {
-                    from: 'users',  // Lookup the user collection
+                    from: 'users',
                     localField: 'userId',
                     foreignField: '_id',
                     as: 'user',
                 },
             },
-            { $unwind: '$user' },  // Unwind the user array to a single object
-            {
-                $lookup: {
-                    from: 'inventories',  // Lookup the inventory collection
-                    localField: 'products.inventoryId',
-                    foreignField: '_id',
-                    as: 'productDetails',
-                },
-            },
-            {
-                $unwind: {
-                    path: '$productDetails',
-                    preserveNullAndEmptyArrays: true,  // Preserve the empty arrays
-                },
-            },
-            {
-                $group: {
-                    _id: '$_id',
-                    user: { $first: '$user' },
-                    products: { $push: { inventoryId: '$products.inventoryId', total: '$products.total', product: '$productDetails' } },
-                    totalAmount: { $first: '$totalAmount' },
-                    createdAt: { $first: '$createdAt' },
-                },
-            },
+            { $unwind: '$user' },
             {
                 $project: {
                     _id: 1,
                     user: {
-                        _id: 1,
-                        name: 1,
-                        email: 1,
+                        _id: '$user._id',
+                        name: '$user.name',
+                        email: '$user.email',
                     },
-                    products: {
-                        inventoryId: 1,
-                        total: 1,
-                        product: {
-                            _id: 1,
-                            name: 1,
-                            description: 1,
-                            price: 1,
-                            image: 1,
-                        },
-                    },
+                    products: 1,
                     totalAmount: 1,
                     createdAt: 1,
                 },
             },
-            { $sort: { createdAt: -1 } },  // Sort invoices by creation date, newest first
+            { $sort: { createdAt: -1 } },
         ]);
 
         if (invoices.length === 0) {
@@ -133,6 +113,11 @@ const invoiceListByUser = async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch invoices' });
     }
 };
+
+
+
+
+
 
 
 
@@ -161,47 +146,14 @@ const viewInvoice = async (req, res) => {
             },
             { $unwind: '$user' },
             {
-                $lookup: {
-                    from: 'inventories',  // Assuming the inventory collection name is 'inventories'
-                    localField: 'products.inventoryId',
-                    foreignField: '_id',
-                    as: 'productDetails',
-                },
-            },
-            {
-                $unwind: {
-                    path: '$productDetails',
-                    preserveNullAndEmptyArrays: true,  // Preserve the empty arrays
-                },
-            },
-            {
-                $group: {
-                    _id: '$_id',
-                    user: { $first: '$user' },
-                    products: { $push: { inventoryId: '$products.inventoryId', total: '$products.total', product: '$productDetails' } },
-                    totalAmount: { $first: '$totalAmount' },
-                    createdAt: { $first: '$createdAt' },
-                },
-            },
-            {
                 $project: {
                     _id: 1,
                     user: {
-                        _id: 1,
-                        name: 1,
-                        email: 1,
+                        _id: '$user._id',
+                        name: '$user.name',
+                        email: '$user.email',
                     },
-                    products: {
-                        inventoryId: 1,
-                        total: 1,
-                        product: {
-                            _id: 1,
-                            name: 1,
-                            description: 1,
-                            price: 1,
-                            image: 1,
-                        },
-                    },
+                    products: 1,
                     totalAmount: 1,
                     createdAt: 1,
                 },
@@ -212,6 +164,7 @@ const viewInvoice = async (req, res) => {
             return res.status(404).json({ error: 'Invoice not found' });
         }
 
+        console.log('Invoice Details:', invoiceDetails[0]); // Log the details for debugging
         return res.status(200).json(invoiceDetails[0]);
     } catch (error) {
         console.error('Error viewing invoice:', error);
@@ -221,6 +174,10 @@ const viewInvoice = async (req, res) => {
 
 
 
+
+
+
+// Controller function to handle printing an invoice
 const printInvoice = async (req, res) => {
     try {
         const { invoiceId } = req.params;
@@ -243,34 +200,14 @@ const printInvoice = async (req, res) => {
             },
             { $unwind: '$user' },
             {
-                $lookup: {
-                    from: 'inventories',  // Assuming the inventory collection name is 'inventories'
-                    localField: 'products.inventoryId',
-                    foreignField: '_id',
-                    as: 'productDetails',
-                },
-            },
-            {
                 $project: {
                     _id: 1,
                     user: {
-                        _id: 1,
-                        name: 1,
-                        email: 1,
+                        _id: '$user._id',
+                        name: '$user.name',
+                        email: '$user.email',
                     },
-                    products: {
-                        inventoryId: 1,
-                        quantity: 1,
-                        total: 1,
-                    },
-                    productDetails: {
-                        _id: 1,
-                        name: 1,
-                        description: 1,
-                        price: 1,
-                        quantity: 1,
-                        image: 1,
-                    },
+                    products: 1,
                     totalAmount: 1,
                     createdAt: 1,
                 },
@@ -302,6 +239,29 @@ const printInvoice = async (req, res) => {
 };
 
 
+const deleteInvoice = async (req, res) => {
+    try {
+        const { invoiceId } = req.params;
+
+        // Check if the provided ID is a valid MongoDB ObjectID
+        if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
+            return res.status(400).json({ message: 'Invalid invoice ID' });
+        }
+
+        // Find and delete the invoice
+        const invoice = await Invoice.findByIdAndDelete(invoiceId);
+
+        if (!invoice) {
+            return res.status(404).json({ message: 'Invoice not found' });
+        }
+
+        res.status(200).json({ message: 'Invoice deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting invoice:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 
-module.exports = {createInvoice, viewInvoice, printInvoice, invoiceListByUser}
+
+module.exports = {createInvoice, viewInvoice, printInvoice, invoiceListByUser, deleteInvoice}
